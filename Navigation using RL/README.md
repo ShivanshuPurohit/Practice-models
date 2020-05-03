@@ -1,16 +1,19 @@
 [//]: # (Image References)
 
-[image1]: https://user-images.githubusercontent.com/10624937/42135619-d90f2f28-7d12-11e8-8823-82b970a54d7e.gif "Trained Agent"
+[image1]: https://user-images.githubusercontent.com/10624937/42135619-d90f2f28-7d12-11e8-8823-82b970a54d7e.gif 
+"Trained Agent"
 
 # Project 1: Navigation
 
 ### Introduction
 
-For this project, you will train an agent to navigate (and collect bananas!) in a large, square world.  
+For this project, we will train an agent to navigate (and collect bananas!) in a large, square world.  
 
 ![Trained Agent][image1]
 
-A reward of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting a blue banana.  Thus, the goal of your agent is to collect as many yellow bananas as possible while avoiding blue bananas.  
+A reward of +1 is provided for collecting a yellow banana, and a reward of -1 is provided for collecting 
+a blue banana.  Thus, the goal of your agent is to collect as many yellow bananas as possible while 
+avoiding blue bananas.  
 
 The state space has 37 dimensions and contains the agent's velocity, along with ray-based perception of objects around agent's forward direction.  Given this information, the agent has to learn how to best select actions.  Four discrete actions are available, corresponding to:
 - **`0`** - move forward.
@@ -18,38 +21,103 @@ The state space has 37 dimensions and contains the agent's velocity, along with 
 - **`2`** - turn left.
 - **`3`** - turn right.
 
-The task is episodic, and in order to solve the environment, your agent must get an average score of +13 over 100 consecutive episodes.
+### Completion criteria
 
-### Getting Started
+The task is episodic, and in order to solve the environment, the agent must get an average score of +13 
+over 100 consecutive episodes.
 
-1. Download the environment from one of the links below.  You need only select the environment that matches your operating system:
-    - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux.zip)
-    - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana.app.zip)
-    - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86.zip)
-    - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86_64.zip)
-    
-    (_For Windows users_) Check out [this link](https://support.microsoft.com/en-us/help/827218/how-to-determine-whether-a-computer-is-running-a-32-bit-version-or-64) if you need help with determining if your computer is running a 32-bit version or 64-bit version of the Windows operating system.
+### Environment
 
-    (_For AWS_) If you'd like to train the agent on AWS (and have not [enabled a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md)), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux_NoVis.zip) to obtain the environment.
+The environment is simulated by Unity application _Banana_ lying in the subdirectory _Banana_Windows_x86_64_
+We start the environment as follows:
 
-2. Place the file in the DRLND GitHub repository, in the `p1_navigation/` folder, and unzip (or decompress) the file. 
+_env = UnityEnvironment(file_name="Banana_Windows_x86_64/Banana.exe")_
 
-### Instructions
+### Training sessions
 
-Follow the instructions in `Navigation.ipynb` to get started with training your own agent!  
+We run several training sessions in according  to the variable _numb_of_trains_.
+For each training session, the obtained weights are saved into the file 'weights_'+str(train_numb)+'.trn'.
+We get files: _weights_0.trn_,  _weights_1.trn_,  _weights_2.trn_,  etc.
 
-### (Optional) Challenge: Learning from Pixels
+For each training session, we construct the **agent** with different parameters
+and we run the *Deep-Q-Network* procedure **dqn** as follows:
 
-After you have successfully completed the project, if you're looking for an additional challenge, you have come to the right place!  In the project, your agent learned from information such as its velocity, along with ray-based perception of objects around its forward direction.  A more challenging task would be to learn directly from pixels!
+  agent = **Agent**(state_size=37, action_size=4, seed=1, fc1_units=fc1_nodes, fc2_units=fc2_nodes)       
+  scores, episodes = **dqn**(n_episodes = 2000, eps_start = epsilon_start, train_numb=i)  
+  
+### Training parameters
 
-To solve this harder task, you'll need to download a new Unity environment.  This environment is almost identical to the project environment, where the only difference is that the state is an 84 x 84 RGB image, corresponding to the agent's first-person view.  (**Note**: Udacity students should not submit a project with this new environment.)
+We experience the following parameters:  _fc1_units_, _fc2_units_,  _eps_start_.
+At the end of each session these parameters together with the episode number (at which the training is finished) 
+are saved into the corresponding lists. These lists are used on the step of testing of weights.
+For each training session, 
+ * _eps_start_ is played out as a random value from 0.988 to 0.955 with step 0.001, 
+ * _fc1_units_ is played out as a random value from 48 to 128 with step 16,
+ * _fc2_inits_ is played out as a random value from fc1_units - 16 to fc1_units - 16 with step 8.
 
-You need only select the environment that matches your operating system:
-- Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/VisualBanana_Linux.zip)
-- Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/VisualBanana.app.zip)
-- Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/VisualBanana_Windows_x86.zip)
-- Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/VisualBanana_Windows_x86_64.zip)
+### Deep-Q-Network algorithm
 
-Then, place the file in the `p1_navigation/` folder in the DRLND GitHub repository, and unzip (or decompress) the file.  Next, open `Navigation_Pixels.ipynb` and follow the instructions to learn how to use the Python API to control the agent.
+The _Deep-Q-Network_ procedure **dqn** performs the **double loop**. 
+External loop (by _episodes_) is executed till the number of episodes reached the maximal number 
+of episodes _n_episodes = 2000_ or the _completion criteria_ is executed.
+The environment _env_  is reset with the paarmeter _train_mode_=_True_.
+For the completion criteria, we check  
 
-(_For AWS_) If you'd like to train the agent on AWS, you must follow the instructions to [set up X Server](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md), and then download the environment for the **Linux** operating system above.
+  _np.mean(scores_window) >=15_,  
+
+where _scores_window_ is the array of the type deque realizing  the shifting window of length <= 100.
+The element _scores_window[i]_ contains the _score_ achieved by the algorithm on the episode _i_.
+
+
+In the internal loop,  **dqn** gets the current _action_ from the **agent**.
+By this _action_ **dqn** gets _state_ and _reward_ from Unity environment.
+Then, the **agent** accept params _state,action,reward,next_state, done_
+to the next training step. The variable _score_ accumulates obtained rewards.
+
+### Agent
+
+The class **Agent** is defined in _dqn_agent.py_. This is the well-known class implementing 
+the following mechanisms:
+
+* Two Q-Networks (local and target) using the simple neural network.
+* Replay memory (using the class ReplayBuffer)
+* Epsilon-greedy mechanism
+* Q-learning, i.e., using the max value for all possible actions
+* Computing the loss function by MSE loss
+* Minimize the loss by gradient descend mechanism using the ADAM optimizer
+
+### Model Q-Network
+
+Both Q-Networks (local and target) are implemented by the class
+**QNetwork** lying in the file _model.py_. This class implements the simple
+neural network with 3 fully-connected layers and 2 
+rectified nonlinear layers. This **QNetwork** is realized in the framework 
+of package **PyTorch**. The number of neurons of the fully-connected layers are 
+as follows:
+
+ * Layer fc1,  number of neurons: _state_size_ x _fc1_units_, 
+ * Layer fc2,  number of neurons: _fc1_units_ x _fc2_units_,
+ * Layer fc3,  number of neurons: _fc2_units_ x _action_size_,
+ 
+where _state_size_ = 37, _action_size_ = 8, _fc1_units_ and _fc2_units_
+are the input params.
+ 
+### Output of training
+
+This is the typical output of training sessions:
+
+For input: fc1_units = 80, fc2_units = 72, we get the following training output:
+train_num: 0 eps_start: 0.989 Episode: 2000, elapsed: 0:47:17.485940, Avg.Score: 11.59, score 12.0, How many scores >= 15: 17, eps.: 0.13
+
+For input: fc1_units = 80, fc2_units = 80, the following training output is as follows: train_num: 1 eps_start: 0.998 Episode: 2000, elapsed: 0:45:05.674792, Avg.Score: 11.96, score 9.0, How many scores >= 15: 26, eps.: 0.134
+
+For input: fc1_units: 80 , fc2_units: 72 train_num: 2 eps_start: 0.988 Episode: 2000, elapsed: 0:45:17.810554, Avg.Score: 12.43, score 11.0, How many scores >= 15: 29, eps.: 0.13
+
+For input: fc1_units: 112 , fc2_units: 112 train_num: 3 eps_start: 0.991 Episode: 2000, elapsed: 0:45:30.095643, Avg.Score: 11.53, score 16.0, How many scores >= 15: 17, eps.: 0.13
+
+For input: fc1_units: 112 , fc2_units: 120 train_num: 4 eps_start: 0.994 Episode: 2000, elapsed: 0:45:28.997457, Avg.Score: 11.86, score 13.0, How many scores >= 15: 23, eps.: 0.13
+
+
+### Credit
+
+Most of the code is based on the Udacity code for DQN.

@@ -1,3 +1,4 @@
+#implementation of Masked Autoencoder Density Estimation in pytorch
 import numpy as np
 
 import torch

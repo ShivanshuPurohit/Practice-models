@@ -1,3 +1,4 @@
+#script to train MADE
 import argparse
 
 import numpy as np

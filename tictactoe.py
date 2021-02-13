@@ -1,3 +1,4 @@
+#tic-tac-toe environment solved with reinforcement learning
 import numpy as np
 import pickle
 
